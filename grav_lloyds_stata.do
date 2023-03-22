@@ -14,7 +14,7 @@ use "estim_lloys_did.dta",clear
 
 *add notyet
 
-csdid Y_t1, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // wboot to bootstrap 
+csdid Y_t2, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // wboot to bootstrap 
 estat event, estore(cs) // this produces and stores the estimates at the same time
 event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ///
 	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm#) together
