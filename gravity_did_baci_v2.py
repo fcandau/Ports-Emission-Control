@@ -128,10 +128,10 @@ df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'la
 # num_zone
 
 #		zone 				num_zone	treated                time
-#    North America				1        august 2012 ->2013     12
-#        Baltic_sea 			2        august 2005 ->2006      5
-#            ECA_NS 			3        august 2007 ->2007      6
-# Carribean                     4        august 2014 ->2014     13
+#    North America				1        august 2012 ->2013     8
+#        Baltic_sea 			2        august 2005 ->2006     1
+#            ECA_NS 			3        august 2007 ->2007     2
+# Carribean                     4        august 2014 ->2014     9
 
 # Unit of treatment are flows 
 
@@ -182,11 +182,11 @@ for l in range(14):
 # Here the last treated is at 9, at max there is 9 period before the treatment for this group
 # Below the code "for l in range(1, 0)" iterates over a range of integers from 1 to 13 (inclusive by (1, 13))
 #
-for l in range(1, 9):
+for l in range(1, 8):
     df[f'F{l}event'] = (df['rel_time'] == -l).astype(int)
 df = df.drop(columns=['F1event'])
 
-#last cohort at t=13
+#last cohort at t=9
 df['lastcohort'] = [1 if x == 9 else 0 for x in df['first_t']]
 
 
