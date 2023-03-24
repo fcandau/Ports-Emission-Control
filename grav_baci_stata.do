@@ -14,7 +14,7 @@ use "estim_grav_did.dta",clear
 
 *add notyet
 
-csdid Y_transp gdp_exp gdp_imp phi, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // wboot to bootstrap 
+csdid Y_logp gdp_logexp gdp_logimp phi_log ntm_log, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // wboot to bootstrap 
 estat event, estore(cs) // this produces and stores the estimates at the same time
 event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ///
 	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm#) together
@@ -23,7 +23,7 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 	
 // did_imputation of Borusyak et al. (2021)// enlever nose  
 
-	did_imputation Y_transp ij t first_t, horizon(0/4) minn(0) autosample pretrends(5) 
+	did_imputation Y_logp ij t first_t, horizon(0/4) minn(0) autosample pretrends(5) 
 	event_plot, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
 		title("Borusyak et al. (2021) imputation estimator") xlabel(-7(1)13) name(BJS,replace))
 	estimates store bjs		
@@ -31,7 +31,7 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 
 // did_multiplegt of de Chaisemartin and D'Haultfoeuille (2020)
 
-	did_multiplegt Y_c i t treated,  average_effect robust_dynamic controls(timetrend c) dynamic(10) placebo(6) longdiff_placebo breps(100) cluster(num_zone)
+	did_multiplegt Y_logp ij t treated,  average_effect robust_dynamic controls(gdp_logexp gdp_logimp phi_log ntm_log) dynamic(10) placebo(6) longdiff_placebo breps(100) cluster(num_zone)
 	event_plot e(estimates)#e(variances), default_look graph_opt(xtitle("Periods since the event") ///
 		ytitle("Average causal effect") title("de Chaisemartin and D'Haultfoeuille (2020)") xlabel(-5(1)5) ///
 		name(dCdH,replace)) stub_lag(Effect_#) stub_lead(Placebo_#) together
@@ -46,7 +46,7 @@ drop F5event F6event F7event F8event
 drop L13event 
 
 	*Estimation
-	eventstudyinteract Y_transp L*event F*event, vce(cluster num_zone) absorb(ij t) cohort(first_t) control_cohort(lastcohort)
+	eventstudyinteract Y_logp L*event F*event gdp_logexp gdp_logimp phi_log ntm_log, vce(cluster num_zone) absorb(ij t) cohort(first_t) control_cohort(lastcohort)
 	event_plot e(b_iw)#e(V_iw), default_look graph_opt(xtitle("Periods since the event") ///
 		ytitle("Average causal effect") xlabel(-4(1)12) title("Sun and Abraham (2020)") name(SA,replace)) ///
 		stub_lag(L#event) stub_lead(F#event) together
@@ -61,14 +61,14 @@ use "estimTWFE.dta",clear
 egen region_st = group(region)
 egen country = group(ISO3)
 egen timetrend=group(treated t)
-sort  i t
-xtset i t
+sort  ij t
+xtset ij t
 
-bacondecomp Y_transc treated, ddetail
+bacondecomp Y_logp treated, ddetail
 
 *Saving estimates for later
 *Estimation
-	reghdfe Y_transc timetrend c F*event L*event, absorb(i t) vce(cluster num_zone)
+	reghdfe Y_logp treated gdp_logexp gdp_logimp phi_log ntm_log F*event L*event, absorb(ij t) vce(cluster num_zone)
 	event_plot, default_look stub_lag(L#event) stub_lead(F#event) together ///
 		graph_opt(xtitle("Days since the event") ytitle("OLS coefficients") xlabel(-7(1)13) ///
 		title("OLS") name(OLS,replace))

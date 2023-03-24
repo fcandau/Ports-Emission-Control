@@ -11,6 +11,9 @@ import numpy as np
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\LLOYDS_data_estimations.dta"
 df = pd.read_stata(file_path)
 # rename for coherence
+ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
+ntm = pd.read_stata(ntm_o)
+
 
 df["iso_imp"] = df["port_j"] + df["iso2_j"]
 df["iso_exp"] = df["port_i"] + df["iso2_i"]
@@ -59,7 +62,7 @@ df['num_zone_imp'] = df['num_zone_imp'].fillna(5)
 df['num_zone'] = df['num_zone'].fillna(5)
 
 
-# Use t=1...17 instead of year=2006...2018
+# Use t=1...17 instead of year=2006...2019
 
 df['t'] = pd.Categorical(df['year'], ordered=True,
                           categories=range(2006, 2019)).codes + 1

@@ -11,19 +11,31 @@ import numpy as np
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\database.dta"
 df = pd.read_stata(file_path)
 
-#we first create a column individual for each flows
+# NTM bilateralized and cleaned
+
+ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
+ntm = pd.read_stata(ntm_o)
+ntm['exp_imp'] = ntm['iso_partner'] + ntm['iso_imposing']
+ntm = ntm.drop_duplicates(subset=['exp_imp','year'])
+ntm = ntm.loc[:, ['exp_imp','year','total_ntm']]
+
+# Idem for BACI 
 df['exp_imp'] = df['iso_exp'] + df['iso_imp']
+
+# Merge the two databases
+df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
+
+
 # we then build a number for each flows
 df['ij'], _ = pd.factorize(df['exp_imp'])
-
-test1 = df.drop_duplicates(subset=['ij', 'year'])
-test2 = df[df.duplicated(subset=['exp_imp', 'year'], keep=False)]
+#df['ij'] += 1
+#test1 = df.drop_duplicates(subset=['ij', 'year'])
+#test2 = df[df.duplicated(subset=['exp_imp', 'year'], keep=False)]
 
 #never treated: we reduced slightly the sample to drop all the trade between landlocked countries
 df.loc[(df['landlocked_imp'] == 1) & (df['landlocked_exp'] == 1), 'landlocked'] = 1
 df = df.drop(df[df['landlocked'] == 1].index)
 
-#one limit for country like fr that it is wholy integrated in north sea!!
 
 #Create zone for treatment
 df.loc[(df['iso_exp'].isin(['USA', 'CAN'])), 'num_zone_exp'] = 1
@@ -57,8 +69,26 @@ df['num_zone'] = df['num_zone'].fillna(5)
 
 # Use t=1...17 instead of year=2002...2018
 
+df = df.drop(df[df['year'] < 2006].index)
 df['t'] = pd.Categorical(df['year'], ordered=True,
-                          categories=range(2002, 2019)).codes + 1
+                          categories=range(2006, 2019)).codes + 1
+
+# some test
+#df[df['ij'].isnull()]
+#
+#test = df.loc[df['value'] == 59154.664]
+### balance panel
+# create a multi-index for individual and time period
+# set the column names for individual IDs and time periods
+
+# create a multi-index for individual and time period
+# create a multi-index for individual and time period
+# set the column names for individual IDs and time periods
+# create a multi-index for individual and time period
+
+
+# create a multi-index for individual and time period
+# set the column names for individual IDs and time periods
 
 # Transformation
 
@@ -70,12 +100,28 @@ df["Y_transt"] = np.arcsinh(df["quantity"])
 
 # Calculate log of different variable
 df.loc[df["quantity"] == 0, "quantity"] = 1
-df["Y_p"] = np.log(df["quantity"])
+df['quantity'] = df['quantity'].fillna(1)
+df["Y_logt"] = np.log(df["quantity"])
+
 df.loc[df["value"] == 0, "value"] = 1
+df['value'] = df['value'].fillna(1)
 df["Y_logp"] = np.log(df["value"])
+df["gdp_logexp"] = np.log(df["gdp_exp"])
+df["gdp_logimp"] = np.log(df["gdp_imp"])
 
 #
 df["phi"] = pd.to_numeric(df["tariff"], errors='coerce')
+df.loc[df["phi"] == 0, "phi"] = 1
+df['phi'] = df['phi'].fillna(1)
+df["phi_log"] = np.log(df["phi"])
+
+df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
+df["ntm_log"] = np.log(df["ntm"])
+
+# Clean/drop unecessary columns
+columns_list = df.columns.tolist()
+print(columns_list)
+df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp',])
 
 # treated or not
 
@@ -87,48 +133,21 @@ df["phi"] = pd.to_numeric(df["tariff"], errors='coerce')
 #            ECA_NS 			3        august 2007 ->2007      6
 # Carribean                     4        august 2014 ->2014     13
 
-###### treated by exporter // importer. Finally not used
-#df.loc[(df['num_zone_exp'] == 1) & (df['t'] >= 12), 'treated_exp'] = 1
-#df.loc[(df['num_zone_exp'] == 2) & (df['t'] >= 5), 'treated_exp'] = 1
-#df.loc[(df['num_zone_exp'] == 3) & (df['t'] >= 6), 'treated_exp'] = 1
-#df.loc[(df['num_zone_exp'] == 4) & (df['t'] >= 13), 'treated_exp'] = 1
-#df['treated_exp'] = df['treated_exp'].fillna(0)
-
-#df.loc[(df['num_zone_imp'] == 1) & (df['t'] >= 12), 'treated_imp'] = 1
-#df.loc[(df['num_zone_imp'] == 2) & (df['t'] >= 5), 'treated_imp'] = 1
-#df.loc[(df['num_zone_imp'] == 3) & (df['t'] >= 6), 'treated_imp'] = 1
-#df.loc[(df['num_zone_imp'] == 4) & (df['t'] >= 13), 'treated_imp'] = 1
-#df['treated_imp'] = df['treated_imp'].fillna(0)
-
-
 # Unit of treatment are flows 
 
-df.loc[(df['num_zone'] == 1) & (df['t'] >= 12), 'treated'] = 1
-df.loc[(df['num_zone'] == 2) & (df['t'] >= 5), 'treated'] = 1
-df.loc[(df['num_zone'] == 3) & (df['t'] >= 6), 'treated'] = 1
-df.loc[(df['num_zone'] == 4) & (df['t'] >= 13), 'treated'] = 1
+df.loc[(df['num_zone'] == 1) & (df['t'] >= 8), 'treated'] = 1
+df.loc[(df['num_zone'] == 2) & (df['t'] >= 1), 'treated'] = 1
+df.loc[(df['num_zone'] == 3) & (df['t'] >= 2), 'treated'] = 1
+df.loc[(df['num_zone'] == 4) & (df['t'] >= 9), 'treated'] = 1
 df['treated'] = df['treated'].fillna(0)
 #######
 #######
 
-# First treatment on exporter/importer. Finally not used.
-#df.loc[df['num_zone_exp'] == 1, 'first_t_exp'] = 12
-#df.loc[df['num_zone_exp'] == 2, 'first_t_exp'] = 5
-#df.loc[df['num_zone_exp'] == 3, 'first_t_exp'] = 6
-#df.loc[df['num_zone_exp'] == 4, 'first_t_exp'] = 13
-#df['first_t_exp'] = df['first_t_exp'].fillna(0)
-
-#df.loc[df['num_zone_imp'] == 1, 'first_t_imp'] = 12
-#df.loc[df['num_zone_imp'] == 2, 'first_t_imp'] = 5
-#df.loc[df['num_zone_imp'] == 3, 'first_t_imp'] = 6
-#df.loc[df['num_zone_imp'] == 4, 'first_t_imp'] = 13
-#df['first_t_imp'] = df['first_t_imp'].fillna(0)
-
 # First_t on zone
-df.loc[df['num_zone'] == 1, 'first_t'] = 12
-df.loc[df['num_zone'] == 2, 'first_t'] = 5
-df.loc[df['num_zone'] == 3, 'first_t'] = 6
-df.loc[df['num_zone'] == 4, 'first_t'] = 13
+df.loc[df['num_zone'] == 1, 'first_t'] = 8
+df.loc[df['num_zone'] == 2, 'first_t'] = 1
+df.loc[df['num_zone'] == 3, 'first_t'] = 2
+df.loc[df['num_zone'] == 4, 'first_t'] = 9
 df['first_t'] = df['first_t'].fillna(0)
 #######
 #######
@@ -149,10 +168,10 @@ df['rel_time']=df['t']-df['first_t']
 #    At the time of the treatment, we want a dummy taking 1 when an individual is treated and zero otherwise, we call it L0event. 
 #    One year after the treatment, we want a dummy taking 1 one year after the treatment and zero otherwise, we call it L1event.
 #    Same reasoning for "L2event", ..., "L13event" 
-# Here first group treated in 2005, so 2018-2005=13 positive rel_time, we add +1 in the loop because we want event0, and finally +1, which gives 15 because the loop stops at 14 
-# More precisely "for l in range(15)": iterates over a range of integers from 0 to 14 (inclusive)
+# Here first group treated in 2006, so 2018-2006=12 positive rel_time, we add +1 in the loop because we want event0, and finally +1, which gives 14 because the loop stops at 13 
+# More precisely "for l in range(14)": iterates over a range of integers from 0 to 13 (inclusive)
 
-for l in range(15):
+for l in range(14):
     df[f'L{l}event'] = (df['rel_time'] == l).astype(int)
 
 # That's almost the reverse. We want dummies for each period before the treatment
@@ -160,15 +179,16 @@ for l in range(15):
 #    Just before the treatment, we want a dummy taking 1, we call it F1event. 
 #    Two year before, a dummy taking one for that period, F2event
 #    and so on.
-# Here the last treated is at 13, at max there is 13 period before the treatment for this group
-# Below the code "for l in range(1, 13)" iterates over a range of integers from 1 to 13 (inclusive)
+# Here the last treated is at 9, at max there is 9 period before the treatment for this group
+# Below the code "for l in range(1, 0)" iterates over a range of integers from 1 to 13 (inclusive by (1, 13))
 #
-for l in range(1, 13):
+for l in range(1, 9):
     df[f'F{l}event'] = (df['rel_time'] == -l).astype(int)
 df = df.drop(columns=['F1event'])
 
 #last cohort at t=13
-df['lastcohort'] = [1 if x == 13 else 0 for x in df['first_t']]
+df['lastcohort'] = [1 if x == 9 else 0 for x in df['first_t']]
+
 
 ####### export the file with the full sample
 df.to_stata('C:/Users/fcanda01/Desktop/data/eca/estim_grav_did.dta')
