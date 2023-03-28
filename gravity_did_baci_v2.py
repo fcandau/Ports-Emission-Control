@@ -121,7 +121,7 @@ df["ntm_log"] = np.log(df["ntm"])
 # Clean/drop unecessary columns
 columns_list = df.columns.tolist()
 print(columns_list)
-df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp',])
+df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp'])
 
 # treated or not
 
