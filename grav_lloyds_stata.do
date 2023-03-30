@@ -9,26 +9,29 @@
 cd "C:\Users\fcanda01\Desktop\data\eca"
 use "estim_lloys_did.dta",clear
 
+egen timetrend=group(treated t)
+
 	
 // Estimation with cldid of Callaway and Sant'Anna (2020)
 
 *add notyet
 
-csdid Y_logdur night_logexp2 night_logimp2 phi_log, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // wboot to bootstrap 
+csdid Y_logq3 timetrend night_logexp1 night_logimp1 gdp_logexp gdp_logimp phi_log, notyet ivar(ij) time(t) gvar(first_t) cluster(num_zone) drimp // wboot to bootstrap 
 estat event, estore(cs) // this produces and stores the estimates at the same time
 event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ///
-	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm#) together
+	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm1#Tm2) together
 	
 		
 // Borusyak et al. (2021)  
-	did_imputation Y_logq3 ij t first_t, controls(night_logexp2 night_logimp2 phi_log) fe(ij t) horizon(0/8) nose cluster(num_zone) alpha(0.1) autosample pretrends(3) 
+did_imputation Y_logq3 ij t first_t, controls(night_logexp1 night_logimp1 gdp_logexp gdp_logimp phi_log) fe(ij t) horizon(0/8) nose cluster(num_zone) alpha(0.1) autosample pretrends(3) 
 	event_plot, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
 		title("Borusyak et al. (2021) imputation estimator") xlabel(-7(1)13) name(BJS,replace))
 	estimates store bjs		
 
 
+
 // did_multiplegt of de Chaisemartin and D'Haultfoeuille (2020)
-	did_multiplegt  Y_logq3 ij t treated,  average_effect robust_dynamic controls(night_logexp2 night_logimp2 phi_log) dynamic(5) placebo(2) longdiff_placebo breps(100) cluster(num_zone)
+	did_multiplegt  Y_logq3 ij t treated,  average_effect robust_dynamic controls(night_logexp1 night_logimp1 gdp_logexp gdp_logimp phi_log) dynamic(5) placebo(2) longdiff_placebo breps(100) cluster(num_zone)
 	event_plot e(estimates)#e(variances), default_look graph_opt(xtitle("Periods since the event") ///
 		ytitle("Average causal effect") title("de Chaisemartin and D'Haultfoeuille (2020)") xlabel(-5(1)5) ///
 		name(dCdH,replace)) stub_lag(Effect_#) stub_lead(Placebo_#) together
@@ -39,11 +42,11 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 // eventstudyinteract of Sun and Abraham (2020)
 *use "estim.dta",clear
 *egen timetrend=group(treated t)
-drop F5event F6event F7event F8event
-drop L13event 
+drop F4event F5event F6event F7event F8event
+drop L12event L13event 
 
 	*Estimation
-	eventstudyinteract Y_transq1 L*event F*event, covariates(night_logexp1 night_logimp1 gdp_logexp gdp_logimp phi_log) vce(cluster num_zone) absorb(ij t) cohort(first_t) control_cohort(lastcohort)
+	eventstudyinteract Y_logq3 L*event F*event, covariates(timetrend gdp_logexp gdp_logimp night_logexp1 night_logimp1 phi_log) vce(cluster num_zone) absorb(ij t) cohort(first_t) control_cohort(lastcohort)
 	event_plot e(b_iw)#e(V_iw), default_look graph_opt(xtitle("Periods since the event") ///
 		ytitle("Average causal effect") xlabel(-4(1)12) title("Sun and Abraham (2020)") name(SA,replace)) ///
 		stub_lag(L#event) stub_lead(F#event) together
@@ -52,16 +55,30 @@ drop L13event
 
 
 // TWFE OLS estimation with first bacon decomp
-sort  ij t
-xtset ij t
-bacondecomp Y_logq3 treated, ddetail
 
-	reghdfe Y_logq1 night_logexp1 night_logimp1 gdp_logexp gdp_logimp phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
+	reghdfe Y_logq3 timetrend gdp_logexp gdp_logimp night_logexp1 night_logimp1 phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
 	event_plot, default_look stub_lag(L#event) stub_lead(F#event) together ///
 		graph_opt(xtitle("Days since the event") ytitle("OLS coefficients") xlabel(-7(1)13) ///
 		title("OLS") name(OLS,replace))
 	estimates store ols
 
+
+	// Combine Borusyak et al. and Sun-Abraham
+    event_plot  ols sa_b#sa_v, ///
+	stub_lag(L#event L#event) stub_lead(F#event F#event) plottype(scatter) ciplottype(rcap) ///
+	together perturb(-0.325(0.13)0.325) trimlead(5) noautolegend ///
+	graph_opt(title("Event study estimators", size(medlarge)) ///
+		xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ylabel(-4(1)2) ///
+		legend(order(1 "TWFE" 3 "Sun-Abraham") ) ///
+		xline(-0.5, lcolor(gs8) lpattern(dash)) yline(0, lcolor(gs8)) graphregion(color(white)) bgcolor(white) ylabel(, angle(horizontal)) ///
+	) ///
+	lag_opt1(msymbol(O) color(cranberry)) lag_ci_opt1(color(cranberry)) ///
+	lag_opt2(msymbol(+) color(blue)) lag_ci_opt2(color(blue)) ///
+	lag_opt3(msymbol(Dh) color(navy)) lag_ci_opt3(color(navy)) ///
+	lag_opt4(msymbol(Th) color(forest_green)) lag_ci_opt4(color(forest_green)) 
+	
+	
+	
 // Combine all plots using the stored estimates
 event_plot  cs sa_b#sa_v ols, ///
 	stub_lag(Tp# L#event L#event) stub_lead(Tm# F#event F#event) plottype(scatter) ciplottype(rcap) ///
@@ -93,8 +110,8 @@ event_plot  cs sa_b#sa_v, ///
 	
 	
 // Combine all plots using the stored estimates
-event_plot btrue# bjs dcdh_b#dcdh_v cs sa_b#sa_v ols, ///
-	stub_lag(tau# tau# Effect_# Tp# L#event L#event) stub_lead(pre# pre# Placebo_# Tm# F#event F#event) plottype(scatter) ciplottype(rcap) ///
+event_plot  bjs dcdh_b#dcdh_v cs sa_b#sa_v ols, ///
+	stub_lag( tau# Effect_# Tp# L#event L#event) stub_lead( pre# Placebo_# Tm# F#event F#event) plottype(scatter) ciplottype(rcap) ///
 	together perturb(-0.325(0.13)0.325) trimlead(5) noautolegend ///
 	graph_opt(title("Event study estimators", size(medlarge)) ///
 		xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-5(1)5) ylabel(0(1)3) ///

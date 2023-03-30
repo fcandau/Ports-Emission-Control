@@ -10,10 +10,11 @@ cd "C:\Users\fcanda01\Desktop\data\eca"
 use "estim_grav_did.dta",clear
 
 
+egen timetrend=group(treated t)
 // TWFE OLS estimation 		
-	reghdfe Y_logp treated gdp_logexp gdp_logimp phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
+reghdfe Y_logp treated gdp_logexp gdp_logimp phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
 
-	
+
 // Callaway and Sant'Anna (2020)
 
 csdid Y_logp gdp_logexp gdp_logimp phi_log, ivar(ij) time(t) gvar(first_t) notyet cluster(num_zone) drimp // 
@@ -22,7 +23,7 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm#) together
 		
 // Borusyak et al. (2021)  
-	did_imputation Y_logp ij t first_t, controls(gdp_logexp gdp_logimp phi_log) fe(ij t) horizon(0/8) nose cluster(num_zone) alpha(0.1) autosample pretrends(3) 
+	did_imputation Y_logp ij t first_t, controls(gdp_logexp gdp_logimp phi_log) fe(ij t) horizon(0/6)  cluster(num_zone) alpha(0.1) autosample pretrends(3) 
 	event_plot, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
 		title("Borusyak et al. (2021) imputation estimator") xlabel(-7(1)13) name(BJS,replace))
 	estimates store bjs		
@@ -44,6 +45,7 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 	matrix sa_v = e(V_iw)
 
 // TWFE OLS estimation 			
+
 	reghdfe Y_logp gdp_logexp gdp_logimp phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
 	event_plot, default_look stub_lag(L#event) stub_lead(F#event) together ///
 		graph_opt(xtitle("Days since the event") ytitle("OLS coefficients") xlabel(-7(1)13) ///
@@ -65,12 +67,12 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 	lag_opt4(msymbol(Th) color(forest_green)) lag_ci_opt4(color(forest_green)) 
 
 	// Combine Borusyak et al. and Sun-Abraham
-    event_plot  bjs sa_b#sa_v, ///
-	stub_lag(tau# L#event) stub_lead(pre# F#event) plottype(scatter) ciplottype(rcap) ///
+    event_plot  ols sa_b#sa_v, ///
+	stub_lag(L#event L#event) stub_lead(F#event F#event) plottype(scatter) ciplottype(rcap) ///
 	together perturb(-0.325(0.13)0.325) trimlead(5) noautolegend ///
 	graph_opt(title("Event study estimators", size(medlarge)) ///
 		xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ylabel(-0.6(0.2)0.7) ///
-		legend(order(1 "Borusyak et al." 3 "Sun-Abraham") ) ///
+		legend(order(1 "TWFE" 3 "Sun-Abraham") ) ///
 		xline(-0.5, lcolor(gs8) lpattern(dash)) yline(0, lcolor(gs8)) graphregion(color(white)) bgcolor(white) ylabel(, angle(horizontal)) ///
 	) ///
 	lag_opt1(msymbol(O) color(cranberry)) lag_ci_opt1(color(cranberry)) ///

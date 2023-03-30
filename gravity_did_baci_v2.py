@@ -13,17 +13,17 @@ df = pd.read_stata(file_path)
 
 # NTM bilateralized and cleaned
 
-ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
-ntm = pd.read_stata(ntm_o)
-ntm['exp_imp'] = ntm['iso_partner'] + ntm['iso_imposing']
-ntm = ntm.drop_duplicates(subset=['exp_imp','year'])
-ntm = ntm.loc[:, ['exp_imp','year','total_ntm']]
+#ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
+#ntm = pd.read_stata(ntm_o)
+#ntm['exp_imp'] = ntm['iso_partner'] + ntm['iso_imposing']
+#ntm = ntm.drop_duplicates(subset=['exp_imp','year'])
+#ntm = ntm.loc[:, ['exp_imp','year','total_ntm']]
 
 # Idem for BACI 
 df['exp_imp'] = df['iso_exp'] + df['iso_imp']
 
 # Merge the two databases
-df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
+#df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
 
 
 # we then build a number for each flows
@@ -57,21 +57,16 @@ df.loc[(df['iso_imp'].isin(['FRA', 'GBR','DEU','BEL','NLD'])), 'num_zone_imp'] =
 df.loc[(df['num_zone_exp'] == 3) & (df['num_zone_imp'] == 3), 'num_zone'] = 3
 df.loc[(df['num_zone_exp'] == 3) | (df['num_zone_imp'] == 3), 'num_zone'] = 3
 
-df.loc[(df['iso_exp'].isin(['PRI'])), 'num_zone_exp'] = 4
-df.loc[(df['iso_imp'].isin(['PRI'])), 'num_zone_imp'] = 4
-df.loc[(df['num_zone_exp'] == 4) & (df['num_zone_imp'] == 4), 'num_zone'] = 4
-df.loc[(df['num_zone_exp'] == 4) | (df['num_zone_imp'] == 4), 'num_zone'] = 4
-
-df['num_zone_exp'] = df['num_zone_exp'].fillna(5)
-df['num_zone_imp'] = df['num_zone_imp'].fillna(5)
-df['num_zone'] = df['num_zone'].fillna(5)
+df['num_zone_exp'] = df['num_zone_exp'].fillna(4)
+df['num_zone_imp'] = df['num_zone_imp'].fillna(4)
+df['num_zone'] = df['num_zone'].fillna(4)
 
 
 # Use t=1...17 instead of year=2002...2018
 
-df = df.drop(df[df['year'] < 2006].index)
+df = df.drop(df[df['year'] < 2004].index)
 df['t'] = pd.Categorical(df['year'], ordered=True,
-                          categories=range(2006, 2019)).codes + 1
+                          categories=range(2004, 2019)).codes + 1
 
 # some test
 #df[df['ij'].isnull()]
@@ -115,13 +110,16 @@ df.loc[df["phi"] == 0, "phi"] = 1
 df['phi'] = df['phi'].fillna(1)
 df["phi_log"] = np.log(df["phi"])
 
-df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
-df["ntm_log"] = np.log(df["ntm"])
+#df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
+#df["ntm_log"] = np.log(df["ntm"])
 
 # Clean/drop unecessary columns
 columns_list = df.columns.tolist()
 print(columns_list)
-df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp'])
+df=df.drop(columns=['exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp'])
+
+# here I save a new dataset without always treated
+#df_w = df[~df['num_zone'].isin([2])]
 
 # treated or not
 
@@ -135,19 +133,17 @@ df=df.drop(columns=['total_ntm', 'tariff', 'exporter', 'importer','iso_imp', 'la
 
 # Unit of treatment are flows 
 
-df.loc[(df['num_zone'] == 1) & (df['t'] >= 8), 'treated'] = 1
-df.loc[(df['num_zone'] == 2) & (df['t'] >= 1), 'treated'] = 1
-df.loc[(df['num_zone'] == 3) & (df['t'] >= 2), 'treated'] = 1
-df.loc[(df['num_zone'] == 4) & (df['t'] >= 9), 'treated'] = 1
+df.loc[(df['num_zone'] == 1) & (df['t'] >= 10), 'treated'] = 1
+df.loc[(df['num_zone'] == 2) & (df['t'] >= 3), 'treated'] = 1
+df.loc[(df['num_zone'] == 3) & (df['t'] >= 5), 'treated'] = 1
 df['treated'] = df['treated'].fillna(0)
 #######
 #######
 
 # First_t on zone
-df.loc[df['num_zone'] == 1, 'first_t'] = 8
-df.loc[df['num_zone'] == 2, 'first_t'] = 1
-df.loc[df['num_zone'] == 3, 'first_t'] = 2
-df.loc[df['num_zone'] == 4, 'first_t'] = 9
+df.loc[df['num_zone'] == 1, 'first_t'] = 10
+df.loc[df['num_zone'] == 2, 'first_t'] = 3
+df.loc[df['num_zone'] == 3, 'first_t'] = 5
 df['first_t'] = df['first_t'].fillna(0)
 #######
 #######
@@ -179,19 +175,17 @@ for l in range(14):
 #    Just before the treatment, we want a dummy taking 1, we call it F1event. 
 #    Two year before, a dummy taking one for that period, F2event
 #    and so on.
-# Here the last treated is at 9, at max there is 9 period before the treatment for this group
-# Below the code "for l in range(1, 0)" iterates over a range of integers from 1 to 13 (inclusive by (1, 13))
+# Here the last treated is at 10, at max there is 10 period before the treatment for this group
+# Below the code "for l in range(1, 0)" iterates over a range of integers from 1 to 10 (inclusive by (1, 8))
 #
-for l in range(1, 8):
+for l in range(1, 10):
     df[f'F{l}event'] = (df['rel_time'] == -l).astype(int)
 df = df.drop(columns=['F1event'])
 
-#last cohort at t=9
-df['lastcohort'] = [1 if x == 9 else 0 for x in df['first_t']]
+#last cohort at t=10
+df['lastcohort'] = [1 if x == 10 else 0 for x in df['first_t']]
 
 
 ####### export the file with the full sample
 df.to_stata('C:/Users/fcanda01/Desktop/data/eca/estim_grav_did.dta')
 #######
-
-

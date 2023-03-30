@@ -11,6 +11,7 @@ import numpy as np
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\LLOYDS_data_estimations_2018.dta"
 df = pd.read_stata(file_path)
 
+
 # NTM bilateralized and cleaned
 
 ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
@@ -28,8 +29,18 @@ df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
 # Tariffs
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\database.dta"
 tarif = pd.read_stata(file_path)
+
+
+pri = tarif[(tarif['iso_exp'] == 'USA') | (tarif['iso_imp'] == 'USA')]
+pri.replace({'iso_exp': {'USA': 'PRI'}, 'iso_imp': {'USA': 'PRI'}}, inplace=True)
+
+pri['exp_imp'] = pri['iso_exp'] + pri['iso_imp']
+pri = pri.loc[:, ['exp_imp', 'year','tariff']]
+
 tarif['exp_imp'] = tarif['iso_exp'] + tarif['iso_imp']
 tarif = tarif.loc[:, ['exp_imp', 'year','tariff']]
+
+test=pd.concat([tarif, pri])
 
 # Merge the two databases
 df = pd.merge(df, tarif, on=['exp_imp', 'year'], how='inner')
@@ -69,9 +80,8 @@ df.loc[(df['iso3_j'].isin(['PRI'])), 'num_zone_imp'] = 4
 df.loc[(df['num_zone_exp'] == 4) & (df['num_zone_imp'] == 4), 'num_zone'] = 4
 df.loc[(df['num_zone_exp'] == 4) | (df['num_zone_imp'] == 4), 'num_zone'] = 4
 
-
 df.loc[(df['port_i'].isin(['rosarito','sandiego','sacramento','stockton','porthueneme','longbeach','westport','alameda','sanfrancisco','richmond','antioch','redwoodcity','benicia','manchester'])), 'num_zone_exp'] = 5
-df.loc[(df['port_i'].isin(['rosarito','sandiego','sacramento','stockton','porthueneme','longbeach','westport','alameda','sanfrancisco','richmond','antioch','redwoodcity','benicia','manchester'])), 'num_zone_imp'] = 5
+df.loc[(df['port_j'].isin(['rosarito','sandiego','sacramento','stockton','porthueneme','longbeach','westport','alameda','sanfrancisco','richmond','antioch','redwoodcity','benicia','manchester'])), 'num_zone_imp'] = 5
 df.loc[(df['num_zone_exp'] == 5) & (df['num_zone_imp'] == 5), 'num_zone'] = 5
 df.loc[(df['num_zone_exp'] == 5) | (df['num_zone_imp'] == 5), 'num_zone'] = 5
 
@@ -100,6 +110,7 @@ df["tonnage_1"] = pd.to_numeric(df["tonnage_1"], errors='coerce')
 df["tonnage_2"] = pd.to_numeric(df["tonnage_2"], errors='coerce')
 df["tonnage_3"] = pd.to_numeric(df["tonnage_3"], errors='coerce')
 df["durationh"] = pd.to_numeric(df["durationh"], errors='coerce')
+df["durationm"] = pd.to_numeric(df["durationm"], errors='coerce')
 
 
 # Calculate the inverse hyperbolic sine of Y
@@ -128,9 +139,18 @@ df.loc[df["tonnage_3"] == 0, "tonnage_3"] = 1
 df['tonnage_3'] = df['tonnage_3'].fillna(1)
 df["Y_logq3"] = np.log(df["tonnage_3"])
 
-df.loc[df["durationh"] == 0, "durationh"] = 1
-df['durationh'] = df['durationh'].fillna(1)
+
+
+#attention ne faire tourner ci-dessous que pour la durée, car valeur extreme aux deux extremite
+
+df = df[df['durationh'] > 2]
+df = df[df['durationh'] < 500]
+df["Y_logdurm"] = np.log(df["durationm"])
 df["Y_logdur"] = np.log(df["durationh"])
+summary = df['durationh'].describe()
+print(summary)
+
+
 
 # Two variables of night light:  75km and 150 km
 df.loc[df["nightlight_1_i"] == 0, "nightlight_1_i"] = 1
@@ -162,6 +182,7 @@ df["ntm_log"] = np.log(df["ntm"])
 df["gdp_logexp"] = np.log(df["gdp_i"])
 df["gdp_logimp"] = np.log(df["gdp_j"])
 
+
 # num_zone
 
 #		zone 				num_zone	treated                time
@@ -179,7 +200,7 @@ df.loc[(df['num_zone'] == 1) & (df['t'] >= 8), 'treated'] = 1
 df.loc[(df['num_zone'] == 2) & (df['t'] >= 1), 'treated'] = 1
 df.loc[(df['num_zone'] == 3) & (df['t'] >= 2), 'treated'] = 1
 df.loc[(df['num_zone'] == 4) & (df['t'] >= 9), 'treated'] = 1
-df.loc[(df['num_zone'] == 4) & (df['t'] >= 4), 'treated'] = 1
+df.loc[(df['num_zone'] == 5) & (df['t'] >= 4), 'treated'] = 1
 df['treated'] = df['treated'].fillna(0)
 #######
 
