@@ -52,30 +52,17 @@ event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("
 		title("OLS") name(OLS,replace))
 	estimates store ols
 	
-// Combine Callaway Sant'anna and Chaisemartin-D'Haultfoeuille
-    event_plot  cs dcdh_b#dcdh_v, ///
-	stub_lag(Tp# Effect_#) stub_lead(Tm# Placebo_#) plottype(scatter) ciplottype(rcap) ///
+	
+// Combine 3 plots using the stored estimates
+event_plot  cs sa_b#sa_v dcdh_b#dcdh_v, ///
+	stub_lag(Tp# L#event Effect_#) stub_lead(Tm# F#event Placebo_#) plottype(scatter) ciplottype(rcap) ///
 	together perturb(-0.325(0.13)0.325) trimlead(5) noautolegend ///
 	graph_opt(title("Event study estimators", size(medlarge)) ///
-		xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ylabel(-0.6(0.2)0.7) ///
-		legend(order(1 "Callaway-Sant'Anna" 3 "Chaisemartin-D'Haultfoeuille") ) ///
+		xtitle("Periods since the event") ytitle("Average causal effect") ylabel(-0.6(0.2)0.6)  ///
+		legend(order(1 "Callaway-Sant'Anna" 3 "Sun-Abraham" 5 "OLS") rows(3) region(style(none))) ///
+	/// the following lines replace default_look with something more elaborate
 		xline(-0.5, lcolor(gs8) lpattern(dash)) yline(0, lcolor(gs8)) graphregion(color(white)) bgcolor(white) ylabel(, angle(horizontal)) ///
 	) ///
-	lag_opt1(msymbol(O) color(cranberry)) lag_ci_opt1(color(cranberry)) ///
-	lag_opt2(msymbol(+) color(blue)) lag_ci_opt2(color(blue)) ///
-	lag_opt3(msymbol(Dh) color(navy)) lag_ci_opt3(color(navy)) ///
-	lag_opt4(msymbol(Th) color(forest_green)) lag_ci_opt4(color(forest_green)) 
-
-	// Combine Borusyak et al. and Sun-Abraham
-    event_plot  ols sa_b#sa_v, ///
-	stub_lag(L#event L#event) stub_lead(F#event F#event) plottype(scatter) ciplottype(rcap) ///
-	together perturb(-0.325(0.13)0.325) trimlead(5) noautolegend ///
-	graph_opt(title("Event study estimators", size(medlarge)) ///
-		xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ylabel(-0.6(0.2)0.7) ///
-		legend(order(1 "TWFE" 3 "Sun-Abraham") ) ///
-		xline(-0.5, lcolor(gs8) lpattern(dash)) yline(0, lcolor(gs8)) graphregion(color(white)) bgcolor(white) ylabel(, angle(horizontal)) ///
-	) ///
-	lag_opt1(msymbol(O) color(cranberry)) lag_ci_opt1(color(cranberry)) ///
-	lag_opt2(msymbol(+) color(blue)) lag_ci_opt2(color(blue)) ///
-	lag_opt3(msymbol(Dh) color(navy)) lag_ci_opt3(color(navy)) ///
-	lag_opt4(msymbol(Th) color(forest_green)) lag_ci_opt4(color(forest_green)) 
+	lag_opt1(msymbol(O) color(dkorange)) lag_ci_opt1(color(dkorange)) ///
+	lag_opt2(msymbol(+) color(cranberry)) lag_ci_opt2(color(cranberry)) ///
+	lag_opt3(msymbol(T) color(navy)) lag_ci_opt3(color(navy)) 

@@ -14,33 +14,33 @@ df = pd.read_stata(file_path)
 
 # NTM bilateralized and cleaned
 
-ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
-ntm = pd.read_stata(ntm_o)
-ntm['exp_imp'] = ntm['iso_partner'] + ntm['iso_imposing']
-ntm = ntm.drop_duplicates(subset=['exp_imp','year'])
-ntm = ntm.loc[:, ['exp_imp','year','total_ntm']]
+#ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
+#ntm = pd.read_stata(ntm_o)
+#ntm['exp_imp'] = ntm['iso_partner'] + ntm['iso_imposing']
+#ntm = ntm.drop_duplicates(subset=['exp_imp','year'])
+#ntm = ntm.loc[:, ['exp_imp','year','total_ntm']]
 
 # Idem for Lloyds 
 df['exp_imp'] = df['iso3_i'] + df['iso3_j']
 df = df.rename(columns={'years': 'year'})
 # Merge the two databases
-df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
+#df = pd.merge(df, ntm, on=['exp_imp', 'year'], how='inner')
 
 # Tariffs
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\database.dta"
 tarif = pd.read_stata(file_path)
 
 
-pri = tarif[(tarif['iso_exp'] == 'USA') | (tarif['iso_imp'] == 'USA')]
-pri.replace({'iso_exp': {'USA': 'PRI'}, 'iso_imp': {'USA': 'PRI'}}, inplace=True)
+#pri = tarif[(tarif['iso_exp'] == 'USA') | (tarif['iso_imp'] == 'USA')]
+#pri.replace({'iso_exp': {'USA': 'PRI'}, 'iso_imp': {'USA': 'PRI'}}, inplace=True)
 
-pri['exp_imp'] = pri['iso_exp'] + pri['iso_imp']
-pri = pri.loc[:, ['exp_imp', 'year','tariff']]
+#pri['exp_imp'] = pri['iso_exp'] + pri['iso_imp']
+#pri = pri.loc[:, ['exp_imp', 'year','tariff']]
 
 tarif['exp_imp'] = tarif['iso_exp'] + tarif['iso_imp']
 tarif = tarif.loc[:, ['exp_imp', 'year','tariff']]
 
-test=pd.concat([tarif, pri])
+#tarif=pd.concat([tarif, pri])
 
 # Merge the two databases
 df = pd.merge(df, tarif, on=['exp_imp', 'year'], how='inner')
@@ -69,16 +69,17 @@ df.loc[(df['iso3_i'].isin(['LVA', 'POL','FIN','LTU','EST','RUS'])), 'num_zone_ex
 df.loc[(df['iso3_j'].isin(['LVA', 'POL','FIN','LTU','EST','RUS'])), 'num_zone_imp'] = 2
 df.loc[(df['num_zone_exp'] == 2) & (df['num_zone_imp'] == 2), 'num_zone'] = 2
 df.loc[(df['num_zone_exp'] == 2) | (df['num_zone_imp'] == 2), 'num_zone'] = 2
+df = df[df['num_zone'] != 2]
 
 df.loc[(df['iso3_i'].isin(['FRA', 'GBR','DEU','BEL','NLD'])), 'num_zone_exp'] = 3
 df.loc[(df['iso3_j'].isin(['FRA', 'GBR','DEU','BEL','NLD'])), 'num_zone_imp'] = 3
 df.loc[(df['num_zone_exp'] == 3) & (df['num_zone_imp'] == 3), 'num_zone'] = 3
 df.loc[(df['num_zone_exp'] == 3) | (df['num_zone_imp'] == 3), 'num_zone'] = 3
 
-df.loc[(df['iso3_i'].isin(['PRI'])), 'num_zone_exp'] = 4
-df.loc[(df['iso3_j'].isin(['PRI'])), 'num_zone_imp'] = 4
-df.loc[(df['num_zone_exp'] == 4) & (df['num_zone_imp'] == 4), 'num_zone'] = 4
-df.loc[(df['num_zone_exp'] == 4) | (df['num_zone_imp'] == 4), 'num_zone'] = 4
+#df.loc[(df['iso3_i'].isin(['PRI'])), 'num_zone_exp'] = 4
+#df.loc[(df['iso3_j'].isin(['PRI'])), 'num_zone_imp'] = 4
+#df.loc[(df['num_zone_exp'] == 4) & (df['num_zone_imp'] == 4), 'num_zone'] = 4
+#df.loc[(df['num_zone_exp'] == 4) | (df['num_zone_imp'] == 4), 'num_zone'] = 4
 
 df.loc[(df['port_i'].isin(['rosarito','sandiego','sacramento','stockton','porthueneme','longbeach','westport','alameda','sanfrancisco','richmond','antioch','redwoodcity','benicia','manchester'])), 'num_zone_exp'] = 5
 df.loc[(df['port_j'].isin(['rosarito','sandiego','sacramento','stockton','porthueneme','longbeach','westport','alameda','sanfrancisco','richmond','antioch','redwoodcity','benicia','manchester'])), 'num_zone_imp'] = 5
@@ -143,12 +144,12 @@ df["Y_logq3"] = np.log(df["tonnage_3"])
 
 #attention ne faire tourner ci-dessous que pour la durée, car valeur extreme aux deux extremite
 
-df = df[df['durationh'] > 2]
-df = df[df['durationh'] < 500]
+df = df[df['durationh'] > 0]
+#df = df[df['durationh'] < 500]
 df["Y_logdurm"] = np.log(df["durationm"])
 df["Y_logdur"] = np.log(df["durationh"])
-summary = df['durationh'].describe()
-print(summary)
+#summary = df['durationh'].describe()
+#print(summary)
 
 
 
@@ -174,10 +175,10 @@ df.loc[df["phi"] == 0, "phi"] = 1
 df['phi'] = df['phi'].fillna(1)
 df["phi_log"] = np.log(df["phi"])
 
-df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
-df.loc[df["ntm"] == 0, "ntm"] = 1
-df['ntm'] = df['ntm'].fillna(1)
-df["ntm_log"] = np.log(df["ntm"])
+#df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
+#df.loc[df["ntm"] == 0, "ntm"] = 1
+#df['ntm'] = df['ntm'].fillna(1)
+#df["ntm_log"] = np.log(df["ntm"])
 
 df["gdp_logexp"] = np.log(df["gdp_i"])
 df["gdp_logimp"] = np.log(df["gdp_j"])
@@ -208,7 +209,7 @@ df['treated'] = df['treated'].fillna(0)
 df.loc[df['num_zone'] == 1, 'first_t'] = 8
 df.loc[df['num_zone'] == 2, 'first_t'] = 1
 df.loc[df['num_zone'] == 3, 'first_t'] = 2
-df.loc[df['num_zone'] == 4, 'first_t'] = 9
+#df.loc[df['num_zone'] == 4, 'first_t'] = 9
 df.loc[df['num_zone'] == 5, 'first_t'] = 4
 
 df['first_t'] = df['first_t'].fillna(0)
@@ -224,10 +225,10 @@ df['rel_time']=df['t']-df['first_t']
 #    At the time of the treatment, we want a dummy taking 1 when an individual is treated and zero otherwise, we call it L0event. 
 #    One year after the treatment, we want a dummy taking 1 one year after the treatment and zero otherwise, we call it L1event.
 #    Same reasoning for "L2event", ..., "L13event" 
-# Here first group treated in 2006, so 2018-2006=12 positive rel_time, we add +1 in the loop because we want event0, and finally +1, which gives 14 because the loop stops at 13 
+# Here first group treated in 2006, so 2018-2007=11 positive rel_time, we add +1 in the loop because we want event0, and finally +1, which gives 14 because the loop stops at 13 
 # More precisely "for l in range(14)": iterates over a range of integers from 0 to 13 (inclusive)
 
-for l in range(14):
+for l in range(13):
     df[f'L{l}event'] = (df['rel_time'] == l).astype(int)
 
 # That's almost the reverse. We want dummies for each period before the treatment
@@ -238,12 +239,12 @@ for l in range(14):
 # Here the last treated is at 9, at max there is 9 period before the treatment for this group
 # Below the code "for l in range(1, 0)" iterates over a range of integers from 1 to 13 (inclusive by (1, 13))
 #
-for l in range(1, 9):
+for l in range(1, 8):
     df[f'F{l}event'] = (df['rel_time'] == -l).astype(int)
 df = df.drop(columns=['F1event'])
 
 #last cohort at t=13
-df['lastcohort'] = [1 if x == 9 else 0 for x in df['first_t']]
+df['lastcohort'] = [1 if x == 8 else 0 for x in df['first_t']]
 
 ####### export the file with the full sample
 df.to_stata('C:/Users/fcanda01/Desktop/data/eca/estim_lloys_did.dta')

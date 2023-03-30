@@ -11,7 +11,7 @@ import numpy as np
 file_path = r"C:\Users\fcanda01\Desktop\data\eca\database.dta"
 df = pd.read_stata(file_path)
 
-# NTM bilateralized and cleaned
+# NTM bilateralized and cleaned, finally not introduced, to many flows lost
 
 #ntm_o = r"C:\Users\fcanda01\Desktop\data\eca\ntm_o.dta"
 #ntm = pd.read_stata(ntm_o)
@@ -40,9 +40,7 @@ df = df.drop(df[df['landlocked'] == 1].index)
 #Create zone for treatment
 df.loc[(df['iso_exp'].isin(['USA', 'CAN'])), 'num_zone_exp'] = 1
 df.loc[(df['iso_imp'].isin(['USA', 'CAN'])), 'num_zone_imp'] = 1
-#if exp=1 AND imp=1 then num_code =1
 df.loc[(df['num_zone_exp'] == 1) & (df['num_zone_imp'] == 1), 'num_zone'] = 1
-#if exp=1 OR imp=1 then num_code =1
 df.loc[(df['num_zone_exp'] == 1) | (df['num_zone_imp'] == 1), 'num_zone'] = 1
 
 
@@ -62,28 +60,11 @@ df['num_zone_imp'] = df['num_zone_imp'].fillna(4)
 df['num_zone'] = df['num_zone'].fillna(4)
 
 
-# Use t=1...17 instead of year=2002...2018
+# Use t=1...14 instead of year=2004...2018
 
 df = df.drop(df[df['year'] < 2004].index)
 df['t'] = pd.Categorical(df['year'], ordered=True,
                           categories=range(2004, 2019)).codes + 1
-
-# some test
-#df[df['ij'].isnull()]
-#
-#test = df.loc[df['value'] == 59154.664]
-### balance panel
-# create a multi-index for individual and time period
-# set the column names for individual IDs and time periods
-
-# create a multi-index for individual and time period
-# create a multi-index for individual and time period
-# set the column names for individual IDs and time periods
-# create a multi-index for individual and time period
-
-
-# create a multi-index for individual and time period
-# set the column names for individual IDs and time periods
 
 # Transformation
 
@@ -110,16 +91,11 @@ df.loc[df["phi"] == 0, "phi"] = 1
 df['phi'] = df['phi'].fillna(1)
 df["phi_log"] = np.log(df["phi"])
 
-#df["ntm"] = pd.to_numeric(df["total_ntm"], errors='coerce')
-#df["ntm_log"] = np.log(df["ntm"])
-
 # Clean/drop unecessary columns
 columns_list = df.columns.tolist()
 print(columns_list)
 df=df.drop(columns=['exporter', 'importer','iso_imp', 'landlocked_imp', 'landlocked','iso_exp', 'landlocked_exp','num_zone_exp', 'num_zone_imp','implementation_date_sox_exp', 'implementation_date_nox_exp', 'cumulative_eca_policy_exp', 'historic_national_policy_exp', 'international_stringency_exp', 'stringency_sox_exp', 'implementation_date_sox_imp', 'implementation_date_nox_imp', 'cumulative_eca_policy_imp', 'historic_national_policy_imp', 'international_stringency_imp', 'stringency_sox_imp'])
 
-# here I save a new dataset without always treated
-#df_w = df[~df['num_zone'].isin([2])]
 
 # treated or not
 
@@ -137,27 +113,17 @@ df.loc[(df['num_zone'] == 1) & (df['t'] >= 10), 'treated'] = 1
 df.loc[(df['num_zone'] == 2) & (df['t'] >= 3), 'treated'] = 1
 df.loc[(df['num_zone'] == 3) & (df['t'] >= 5), 'treated'] = 1
 df['treated'] = df['treated'].fillna(0)
-#######
-#######
 
 # First_t on zone
 df.loc[df['num_zone'] == 1, 'first_t'] = 10
 df.loc[df['num_zone'] == 2, 'first_t'] = 3
 df.loc[df['num_zone'] == 3, 'first_t'] = 5
 df['first_t'] = df['first_t'].fillna(0)
-#######
-#######
 
 # Relative time, i.e. number of periods since treated (could be missing if never treated)
 
-# On exporter and importer, finally not used
-#df['rel_time_exp']=df['t']-df['first_t_exp']
-#df['rel_time_imp']=df['t']-df['first_t_imp']
-
 df['rel_time']=df['t']-df['first_t']
 
-#######
-#######
 
 # Loop over the values from 0 to 15: we want the number of period since the first treatment. The upper bound is found from the first treated
 # Detail: 
@@ -184,7 +150,6 @@ df = df.drop(columns=['F1event'])
 
 #last cohort at t=10
 df['lastcohort'] = [1 if x == 10 else 0 for x in df['first_t']]
-
 
 ####### export the file with the full sample
 df.to_stata('C:/Users/fcanda01/Desktop/data/eca/estim_grav_did.dta')
