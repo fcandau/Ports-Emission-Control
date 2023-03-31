@@ -189,7 +189,7 @@ df["gdp_logimp"] = np.log(df["gdp_j"])
 #		zone 				num_zone	treated                time
 #    North America				1        august 2012 ->2013     8
 #        Baltic_sea 			2        august 2005 ->2006     1
-#            ECA_NS 			3        august 2007 ->2007     2
+#            ECA_NS 			3        august 2007 ->2008     3
 # Carribean                     4        august 2014 ->2014     9
 # California                    5        2009                   4
 #######
@@ -198,17 +198,17 @@ df["gdp_logimp"] = np.log(df["gdp_j"])
 # Unit of treatment are flows 
 
 df.loc[(df['num_zone'] == 1) & (df['t'] >= 8), 'treated'] = 1
-df.loc[(df['num_zone'] == 2) & (df['t'] >= 1), 'treated'] = 1
-df.loc[(df['num_zone'] == 3) & (df['t'] >= 2), 'treated'] = 1
-df.loc[(df['num_zone'] == 4) & (df['t'] >= 9), 'treated'] = 1
+#df.loc[(df['num_zone'] == 2) & (df['t'] >= 1), 'treated'] = 1
+df.loc[(df['num_zone'] == 3) & (df['t'] >= 3), 'treated'] = 1
+#df.loc[(df['num_zone'] == 4) & (df['t'] >= 9), 'treated'] = 1
 df.loc[(df['num_zone'] == 5) & (df['t'] >= 4), 'treated'] = 1
 df['treated'] = df['treated'].fillna(0)
 #######
 
 # First_t on zone
 df.loc[df['num_zone'] == 1, 'first_t'] = 8
-df.loc[df['num_zone'] == 2, 'first_t'] = 1
-df.loc[df['num_zone'] == 3, 'first_t'] = 2
+#df.loc[df['num_zone'] == 2, 'first_t'] = 1
+df.loc[df['num_zone'] == 3, 'first_t'] = 3
 #df.loc[df['num_zone'] == 4, 'first_t'] = 9
 df.loc[df['num_zone'] == 5, 'first_t'] = 4
 

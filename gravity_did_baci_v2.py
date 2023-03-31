@@ -102,10 +102,9 @@ df=df.drop(columns=['exporter', 'importer','iso_imp', 'landlocked_imp', 'landloc
 # num_zone
 
 #		zone 				num_zone	treated                time
-#    North America				1        august 2012 ->2013     8
-#        Baltic_sea 			2        august 2005 ->2006     1
-#            ECA_NS 			3        august 2007 ->2007     2
-# Carribean                     4        august 2014 ->2014     9
+#    North America				1        august 2012 ->2013     10
+#        Baltic_sea 			2        august 2005 ->2006     3
+#            ECA_NS 			3        august 2007 ->2008     5
 
 # Unit of treatment are flows 
 

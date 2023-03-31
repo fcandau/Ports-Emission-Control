@@ -26,19 +26,34 @@ library(glue)
 # Load data
 library(haven)
 df <- data.frame(read.dta13(here("C:/Users/fcanda01/Desktop/data/eca",'estim_grav_did.dta')))
+dfll <- data.frame(read.dta13(here("C:/Users/fcanda01/Desktop/data/eca",'estim_lloys_did.dta')))
 
-# Get TWFE coefficient
-twfe <- fixest::feols(Y_logp ~ treated + gdp_logexp + gdp_logimp + phi_log | ij + t, 
+# BACI TWFE coefficient
+twfe <- fixest::feols(Y_logt ~ treated + gdp_logexp + gdp_logimp + phi_log | ij + t, 
                       data = df,
+                      cluster = ~num_zone)
+
+summary(twfe)
+
+# LLOYDS TWFE coefficient Y_logq1 
+twfe <- fixest::feols(Y_logq1 ~ treated + gdp_logexp + gdp_logimp + phi_log | ij + t, 
+                      data = dfll,
+                      cluster = ~num_zone)
+
+summary(twfe)
+
+# LLOYDS TWFE coefficient duration 
+twfe <- fixest::feols(Y_logdurm ~ treated + gdp_logexp + gdp_logimp + night_logimp1 + night_logexp1 + phi_log | ij + t, 
+                      data = dfll,
                       cluster = ~num_zone)
 
 summary(twfe)
 
 # Get Bacon decomposition 
 
-df_bacon <- bacon(Y_logp ~ treated,
-                  data = df,
-                  id_var = "ij",
+df_bacon <- bacon(Y_logdur ~ treated,
+                  data = dfll,
+                  id_var = "num_zone",
                   time_var = "t")
 bacon_summary(df_bacon)
 
@@ -70,12 +85,12 @@ twfe <- fixest::feols(Y_logp ~ treated| ij + t,
                       cluster = ~num_zone)
 
 summary(twfe)
-
+num_zone
 # Get Bacon decomposition 
 
 df_bacon <- bacon(Y_logp ~ treated,
                   data = df,
-                  id_var = "num_zone",
+                  id_var = "",
                   time_var = "t")
 bacon_summary(df_bacon)
 

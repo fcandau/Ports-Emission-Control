@@ -9,10 +9,9 @@
 cd "C:\Users\fcanda01\Desktop\data\eca"
 use "estim_grav_did.dta",clear
 
-
-egen timetrend=group(treated t)
 // TWFE OLS estimation 		
-reghdfe Y_logp treated gdp_logexp gdp_logimp phi_log F*event L*event, absorb(ij t) vce(cluster num_zone)
+reghdfe Y_logp treated gdp_logexp gdp_logimp phi_log, absorb(ij t) vce(cluster num_zone)
+reghdfe Y_logt treated gdp_logexp gdp_logimp phi_log, absorb(ij t) vce(cluster num_zone)
 
 
 // Callaway and Sant'Anna (2020)
@@ -21,12 +20,18 @@ csdid Y_logp gdp_logexp gdp_logimp phi_log, ivar(ij) time(t) gvar(first_t) notye
 estat event, estore(cs) // this produces and stores the estimates at the same time
 event_plot cs, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") xlabel(-7(1)13) ///
 	title("Callaway and Sant'Anna (2020)")) stub_lag(Tp#) stub_lead(Tm#) together
-		
-// Borusyak et al. (2021)  
-	did_imputation Y_logp ij t first_t, controls(gdp_logexp gdp_logimp phi_log) fe(ij t) horizon(0/6)  cluster(num_zone) alpha(0.1) autosample pretrends(3) 
-	event_plot, default_look graph_opt(xtitle("Periods since the event") ytitle("Average causal effect") ///
-		title("Borusyak et al. (2021) imputation estimator") xlabel(-7(1)13) name(BJS,replace))
-	estimates store bjs		
+	
+			  
+csdid_plot, group(3) title(Baltic Sea) name(m3,replace) legend( row(1))
+csdid_plot, group(5) title(North Sea) name(m5,replace) legend( row(1))
+csdid_plot, group(10) title(North America) name(m10,replace) legend( row(1))
+*csdid_plot, group(9) title(North America) name(m9,replace) legend( row(1))
+	
+** Here we put all these graph on one page
+net install  grc1leg, from(http://www.stata.com/users/vwiggins)
+grc1leg m3 m5 m10, nocopies ycommon
+grc1leg m3 m5 m10 , nocopies ycommon xcommon note(note: ATT(g,t) within cohorts)
+	
 
 // de Chaisemartin and D'Haultfoeuille (2020)
 	did_multiplegt Y_logp ij t treated,  average_effect robust_dynamic controls(gdp_logexp gdp_logimp phi_log) dynamic(10) placebo(6) longdiff_placebo breps(100) cluster(num_zone)
